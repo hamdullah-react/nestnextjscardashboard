@@ -1,0 +1,770 @@
+// Alromaih Car Schema for NestJS API
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Brand ────────────────────────────────────────────────────────────────────
+
+model Brand {
+  id          Int      @id @default(autoincrement())
+  name        Json? // Translatable field (stores: {ar_001: "...", en_US: "..."})
+  description Json? // Translatable field
+  slug        String?  @db.Text
+  logo        String?  @db.Text
+  active      Boolean? @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  models      Model[]
+  cars        Car[]
+  carVariants CarVariant[]
+
+  @@map("brands")
+}
+
+// ─── Model ────────────────────────────────────────────────────────────────────
+
+model Model {
+  id          Int       @id @default(autoincrement())
+
+  name        Json? // Translatable field
+  description Json? // Translatable field
+  active      Boolean?
+  displayName String?   @db.Text @map("display_name")
+  createDate  DateTime? @map("create_date")
+  writeDate   DateTime? @map("write_date")
+  brandId     Int?      @map("brand_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  brand       Brand?       @relation(fields: [brandId], references: [id])
+  trims       Trim[]
+  cars        Car[]
+  carVariants CarVariant[]
+
+  @@map("models")
+}
+
+// ─── Trim ─────────────────────────────────────────────────────────────────────
+
+model Trim {
+  id          Int       @id @default(autoincrement())
+
+  name        Json? // Translatable field
+  description Json? // Translatable field
+  code        String?   @db.Text
+  active      Boolean?
+  displayName String?   @db.Text @map("display_name")
+  createDate  DateTime? @map("create_date")
+  writeDate   DateTime? @map("write_date")
+  modelId     Int?      @map("model_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  model       Model?       @relation(fields: [modelId], references: [id])
+  cars        Car[]
+  carVariants CarVariant[]
+
+  @@map("trims")
+}
+
+// ─── Year ─────────────────────────────────────────────────────────────────────
+
+model Year {
+  id          Int       @id @default(autoincrement())
+
+  name        Json? // Translatable field
+  description Json? // Translatable field
+  active      Boolean?
+  displayName String?   @db.Text @map("display_name")
+  createDate  DateTime? @map("create_date")
+  writeDate   DateTime? @map("write_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  cars        Car[]
+  carVariants CarVariant[]
+
+  @@map("years")
+}
+
+// ─── Color ────────────────────────────────────────────────────────────────────
+
+model Color {
+  id          Int       @id @default(autoincrement())
+
+  name        Json? // Translatable field
+  description Json? // Translatable field
+  code        String?   @db.Text
+  colorPicker String?   @db.Text @map("color_picker")
+  displayName String?   @db.Text @map("display_name")
+  createDate  DateTime? @map("create_date")
+  writeDate   DateTime? @map("write_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  carVariants CarVariant[]
+
+  @@map("colors")
+}
+
+// ─── Car ──────────────────────────────────────────────────────────────────────
+
+model Car {
+  id                          Int       @id @default(autoincrement())
+
+  name                        Json? // Translatable field
+  description                 Json? // Translatable field
+  specificationCount          Int?      @map("specification_count")
+  keySpecificationCount       Int?      @map("key_specification_count")
+  specificationCategoriesCount Int?     @map("specification_categories_count")
+  specificationCompletion     Decimal?  @map("specification_completion")
+  metaTitle                   Json?     @map("meta_title") // Translatable field
+  metaDescription             Json?     @map("meta_description") // Translatable field
+  metaKeywords                Json?     @map("meta_keywords") // Translatable field
+  slug                        String?   @db.Text
+  qrCode                      String?   @db.Text @map("qr_code")
+  qrCodeUrl                   String?   @db.Text @map("qr_code_url")
+  canonicalUrl                String?   @db.Text @map("canonical_url")
+  seoOgTitle                  Json?     @map("seo_og_title") // Translatable field
+  seoOgDescription            Json?     @map("seo_og_description") // Translatable field
+  carThumbnailUrl             String?   @db.Text @map("car_thumbnail_url")
+  brandLogoUrl                String?   @db.Text @map("brand_logo_url")
+  colorIndex                  Int?      @map("color_index")
+  cashPrice                   Decimal?  @db.Decimal(12, 2) @map("cash_price")
+  availableOnRequest          Boolean?  @map("available_on_request")
+  vatPercentage               Decimal?  @map("vat_percentage")
+  cashPriceWithVat            Decimal?  @db.Decimal(12, 2) @map("cash_price_with_vat")
+  financePrice                Decimal?  @db.Decimal(12, 2) @map("finance_price")
+  installmentPrice            Decimal?  @db.Decimal(12, 2) @map("installment_price")
+  hasActiveOffer              Boolean?  @map("has_active_offer")
+  discountPrice               Decimal?  @db.Decimal(12, 2) @map("discount_price")
+  status                      String?   @db.Text
+  mediaCount                  Int?      @map("media_count")
+  mediaCountByType            Int?      @map("media_count_by_type")
+  isFeatured                  Boolean?  @map("is_featured")
+  hasTestDrive                Boolean?  @map("has_test_drive")
+  testDriveInstructions       Json?     @map("test_drive_instructions") // Translatable field
+  showComparisonOption        Boolean?  @map("show_comparison_option")
+  sequence                    Int?
+  active                      Boolean?
+  displayName                 String?   @db.Text @map("display_name")
+  createDate                  DateTime? @map("create_date")
+  writeDate                   DateTime? @map("write_date")
+
+  // Foreign Keys
+  specificationTemplateId Int? @map("specification_template_id")
+  brandId                 Int? @map("brand_id")
+  modelId                 Int? @map("model_id")
+  trimId                  Int? @map("trim_id")
+  yearId                  Int? @map("year_id")
+  primaryVariantId        Int? @map("primary_variant_id")
+  primaryColorId          Int? @map("primary_color_id")
+  compareWithCarId        Int? @unique @map("compare_with_car_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  brand          Brand?             @relation(fields: [brandId], references: [id])
+  model          Model?             @relation(fields: [modelId], references: [id])
+  trim           Trim?              @relation(fields: [trimId], references: [id])
+  year           Year?              @relation(fields: [yearId], references: [id])
+  compareWithCar Car?               @relation("CarComparison", fields: [compareWithCarId], references: [id])
+  comparedByCar  Car?               @relation("CarComparison")
+  variants       CarVariant[]
+  specifications CarSpecification[]
+  media          CarMedia[]
+  offerLines     CarOfferLine[]
+
+  @@map("cars")
+}
+
+// ─── CarVariant ───────────────────────────────────────────────────────────────
+
+model CarVariant {
+  id                       Int       @id @default(autoincrement())
+
+  name                     Json? // Translatable field
+  qtyAvailable             Decimal?  @map("qty_available")
+  qtyForecasted            Decimal?  @map("qty_forecasted")
+  virtualAvailable         Decimal?  @map("virtual_available")
+  incomingQty              Decimal?  @map("incoming_qty")
+  outgoingQty              Decimal?  @map("outgoing_qty")
+  stockStatus              String?   @db.Text @map("stock_status")
+  isPrimary                Boolean?  @map("is_primary")
+  image                    String?   @db.Text
+  carThumbnailUrl          String?   @db.Text @map("car_thumbnail_url")
+  variantThumbnailUrl      String?   @db.Text @map("variant_thumbnail_url")
+  mediaCount               Int?      @map("media_count")
+  hasExteriorImages        Boolean?  @map("has_exterior_images")
+  hasInteriorImages        Boolean?  @map("has_interior_images")
+  hasVideos                Boolean?  @map("has_videos")
+  has_360View              Boolean?  @map("has_360_view")
+  hasBrochures             Boolean?  @map("has_brochures")
+  price                    Decimal?  @db.Decimal(12, 2)
+  cashPrice                Decimal?  @db.Decimal(12, 2) @map("cash_price")
+  financePrice             Decimal?  @db.Decimal(12, 2) @map("finance_price")
+  installmentPrice         Decimal?  @db.Decimal(12, 2) @map("installment_price")
+  hasOffer                 Boolean?  @map("has_offer")
+  offerPrice               Decimal?  @db.Decimal(12, 2) @map("offer_price")
+  active                   Boolean?
+  sequence                 Int?
+  displayName              String?   @db.Text @map("display_name")
+  createDate               DateTime? @map("create_date")
+  writeDate                DateTime? @map("write_date")
+  reservedQty              Decimal?  @map("reserved_qty")
+  availableToSell          Decimal?  @map("available_to_sell")
+  pendingDeliveryQty       Decimal?  @map("pending_delivery_qty")
+  lastSaleDate             DateTime? @map("last_sale_date")
+  salesCount               Int?      @map("sales_count")
+  quotationCount           Int?      @map("quotation_count")
+  leadCount                Int?      @map("lead_count")
+  inquiryCount             Int?      @map("inquiry_count")
+  testDriveCount           Int?      @map("test_drive_count")
+  avgDaysToSell            Decimal?  @map("avg_days_to_sell")
+  listPrice                Decimal?  @db.Decimal(12, 2) @map("list_price")
+  minSalePrice             Decimal?  @db.Decimal(12, 2) @map("min_sale_price")
+  maxDiscountAmount        Decimal?  @db.Decimal(12, 2) @map("max_discount_amount")
+  maxDiscountPercentage    Int?      @map("max_discount_percentage")
+  dealerPrice              Decimal?  @db.Decimal(12, 2) @map("dealer_price")
+  profitMargin             Decimal?  @map("profit_margin")
+  profitMarginPercentage   Decimal?  @map("profit_margin_percentage")
+  commissionRate           Decimal?  @map("commission_rate")
+  commissionAmount         Decimal?  @db.Decimal(12, 2) @map("commission_amount")
+  bonusEligible            Boolean?  @map("bonus_eligible")
+  volumeDiscountEligible   Int?      @map("volume_discount_eligible")
+  fleetSaleEligible        Boolean?  @map("fleet_sale_eligible")
+  promotionalItem          Boolean?  @map("promotional_item")
+  availabilityStatus       String?   @db.Text @map("availability_status")
+  priceRange               Decimal?  @db.Decimal(12, 2) @map("price_range")
+  carTransmission          String?   @db.Text @map("car_transmission")
+  carFuelType              String?   @db.Text @map("car_fuel_type")
+  carBodyType              String?   @db.Text @map("car_body_type")
+  carEngineSize            Decimal?  @map("car_engine_size")
+  carSeatingCapacity       Int?      @map("car_seating_capacity")
+  keySpecifications        String?   @db.Text @map("key_specifications")
+
+  // Foreign Keys
+  carId                  Int? @map("car_id")
+  colorId                Int? @map("color_id")
+  productVariantId       Int? @map("product_variant_id")
+  productTemplateId      Int? @map("product_template_id")
+  primaryExteriorImageId Int? @map("primary_exterior_image_id")
+  primaryInteriorImageId Int? @map("primary_interior_image_id")
+  primaryVideoId         Int? @map("primary_video_id")
+  activeOfferId          Int? @map("active_offer_id")
+  carBrandId             Int? @map("car_brand_id")
+  carModelId             Int? @map("car_model_id")
+  carYearId              Int? @map("car_year_id")
+  carTrimId              Int? @map("car_trim_id")
+  primaryWarehouseId     Int? @map("primary_warehouse_id")
+  primaryLocationId      Int? @map("primary_location_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  car       Car?       @relation(fields: [carId], references: [id])
+  color     Color?     @relation(fields: [colorId], references: [id])
+  carBrand  Brand?     @relation(fields: [carBrandId], references: [id])
+  carModel  Model?     @relation(fields: [carModelId], references: [id])
+  carYear   Year?      @relation(fields: [carYearId], references: [id])
+  carTrim   Trim?      @relation(fields: [carTrimId], references: [id])
+  offers    CarOffer[]
+  media     CarMedia[]
+
+  @@map("car_variants")
+}
+
+// ─── CarSpecification ─────────────────────────────────────────────────────────
+
+model CarSpecification {
+  id                             Int       @id @default(autoincrement())
+
+  apiAttributeName               Json?     @map("api_attribute_name") // Translatable field
+  apiCategoryName                Json?     @map("api_category_name") // Translatable field
+  apiValueName                   Json?     @map("api_value_name") // Translatable field
+  apiUnitName                    String?   @db.Text @map("api_unit_name")
+  apiUnitCode                    String?   @db.Text @map("api_unit_code")
+  displayType                    String?   @db.Text @map("display_type")
+  sequence                       Int?
+  valueText                      String?   @db.Text @map("value_text")
+  valueNumeric                   Decimal?  @map("value_numeric")
+  value                          Boolean?  @map("value_boolean")
+  displayValue                   String?   @db.Text @map("display_value")
+  searchText                     String?   @db.Text @map("search_text")
+  isHighlighted                  Boolean?  @map("is_highlighted")
+  isKey                          Boolean?  @map("is_key")
+  attributeDisplayType           String?   @db.Text @map("attribute_display_type")
+  attributeSequence              Int?      @map("attribute_sequence")
+  attributeCreateVariant         String?   @db.Text @map("attribute_create_variant")
+  attributeCategoryType          String?   @db.Text @map("attribute_category_type")
+  attributeSequenceInCategory    Int?      @map("attribute_sequence_in_category")
+  attributeIsWebsiteSpec         Boolean?  @map("attribute_is_website_spec")
+  attributeIsKeyAttribute        Boolean?  @map("attribute_is_key_attribute")
+  attributeDisplayInCarCard      Boolean?  @map("attribute_display_in_car_card")
+  attributeInlineEditable        Boolean?  @map("attribute_inline_editable")
+  attributeIconImage             String?   @db.Text @map("attribute_icon_image")
+  attributeIconImageBunnyPath    String?   @db.Text @map("attribute_icon_image_bunny_path")
+  attributeIconImageCdnUrl       String?   @db.Text @map("attribute_icon_image_cdn_url")
+  attributeUseInSearch           Boolean?  @map("attribute_use_in_search")
+  attributeUseInCompare          Boolean?  @map("attribute_use_in_compare")
+  attributeUseInFilter           Boolean?  @map("attribute_use_in_filter")
+  attributeUseInProductTable     Boolean?  @map("attribute_use_in_product_table")
+  attributeIsFilterable          Boolean?  @map("attribute_is_filterable")
+  attributeFilterPriority        Int?      @map("attribute_filter_priority")
+  attributeAllowMultiSelect      Boolean?  @map("attribute_allow_multi_select")
+  attributeShowCount             Int?      @map("attribute_show_count")
+  attributeDefaultExpanded       Boolean?  @map("attribute_default_expanded")
+  attributePrioritySequence      Int?      @map("attribute_priority_sequence")
+  attributeIsStoredInValues      Boolean?  @map("attribute_is_stored_in_values")
+  attributeDescription           String?   @db.Text @map("attribute_description")
+  categoryDisplayType            String?   @db.Text @map("category_display_type")
+  categorySequence               Int?      @map("category_sequence")
+  categoryActive                 Boolean?  @map("category_active")
+  categoryDescription            String?   @db.Text @map("category_description")
+  categoryIconImage              String?   @db.Text @map("category_icon_image")
+  categoryIconImageBunnyPath     String?   @db.Text @map("category_icon_image_bunny_path")
+  categoryIconImageCdnUrl        String?   @db.Text @map("category_icon_image_cdn_url")
+  categoryIconImageVisible       Boolean?  @map("category_icon_image_visible")
+  active                         Boolean?
+  hasAttributeValues             Boolean?  @map("has_attribute_values")
+  displayName                    String?   @db.Text @map("display_name")
+  createDate                     DateTime? @map("create_date")
+  writeDate                      DateTime? @map("write_date")
+
+  // Foreign Keys
+  carId                   Int? @map("car_id")
+  categoryId              Int? @map("category_id")
+  attributeId             Int? @map("attribute_id")
+  unitId                  Int? @map("unit_id")
+  attributeValueId        Int? @map("attribute_value_id")
+  attributeSpecCategoryId Int? @map("attribute_spec_category_id")
+  templateLineId          Int? @map("template_line_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  car Car? @relation(fields: [carId], references: [id])
+
+  @@map("car_specifications")
+}
+
+// ─── CarMedia ─────────────────────────────────────────────────────────────────
+
+model CarMedia {
+  id                         Int       @id @default(autoincrement())
+
+  name                       String?   @db.Text
+  nameTranslations           Json?     @map("name_translations") // Translatable field
+  descriptionTranslations    Json?     @map("description_translations") // Translatable field
+  altTextTranslations        Json?     @map("alt_text_translations") // Translatable field
+  seoTitleTranslations       Json?     @map("seo_title_translations") // Translatable field
+  seoDescriptionTranslations Json?     @map("seo_description_translations") // Translatable field
+  mediaType                  String?   @db.Text @map("media_type")
+  contentType                String?   @db.Text @map("content_type")
+  image                      String?   @db.Text
+  videoFile                  String?   @db.Text @map("video_file")
+  documentFile               String?   @db.Text @map("document_file")
+  bunnyImagePath             String?   @db.Text @map("bunny_image_path")
+  bunnyVideoPath             String?   @db.Text @map("bunny_video_path")
+  bunnyDocumentPath          String?   @db.Text @map("bunny_document_path")
+  bunnyHtmlPath              String?   @db.Text @map("bunny_html_path")
+  videoUrl                   String?   @db.Text @map("video_url")
+  iframeCode                 String?   @db.Text @map("iframe_code")
+  externalLink               String?   @db.Text @map("external_link")
+  sequence                   Int?
+  description                Json? // Translatable field
+  altText                    Json?     @map("alt_text") // Translatable field
+  buttonText                 Json?     @map("button_text") // Translatable field
+  isPrimary                  Boolean?  @map("is_primary")
+  isFeatured                 Boolean?  @map("is_featured")
+  isPublic                   Boolean?  @map("is_public")
+  isPressMaterial            Boolean?  @map("is_press_material")
+  active                     Boolean?
+  fileSize                   Decimal?  @map("file_size")
+  mimeType                   String?   @db.Text @map("mime_type")
+  dimensions                 String?   @db.Text
+  websiteVisible             Boolean?  @map("website_visible")
+  seoTitle                   Json?     @map("seo_title") // Translatable field
+  seoDescription             Json?     @map("seo_description") // Translatable field
+  linkUrl                    String?   @db.Text @map("link_url")
+  elementType                String?   @db.Text @map("element_type")
+  elementConfig              String?   @db.Text @map("element_config")
+  isComposite                Boolean?  @map("is_composite")
+  compositeType              String?   @db.Text @map("composite_type")
+  positionX                  Decimal?  @map("position_x")
+  positionY                  Decimal?  @map("position_y")
+  widthPercent               Decimal?  @map("width_percent")
+  heightPercent              Decimal?  @map("height_percent")
+  zIndex                     Int?      @map("z_index")
+  htmlContent                String?   @db.Text @map("html_content")
+  cssClasses                 String?   @db.Text @map("css_classes")
+  inlineStyles               String?   @db.Text @map("inline_styles")
+  animationType              String?   @db.Text @map("animation_type")
+  animationDuration          Decimal?  @map("animation_duration")
+  animationDelay             Decimal?  @map("animation_delay")
+  buttonStyle                String?   @db.Text @map("button_style")
+  externalUrl                String?   @db.Text @map("external_url")
+  apiCdnUrl                  String?   @db.Text @map("api_cdn_url")
+  apiMediaType               String?   @db.Text @map("api_media_type")
+  apiContentType             String?   @db.Text @map("api_content_type")
+  apiCarName                 String?   @db.Text @map("api_car_name")
+  apiVariantName             String?   @db.Text @map("api_variant_name")
+  apiVariantColor            String?   @db.Text @map("api_variant_color")
+  apiOfferName               String?   @db.Text @map("api_offer_name")
+  apiFileExtension           String?   @db.Text @map("api_file_extension")
+  apiIsVideo                 Boolean?  @map("api_is_video")
+  apiIsImage                 Boolean?  @map("api_is_image")
+  apiIsDocument              Boolean?  @map("api_is_document")
+  displayName                String?   @db.Text @map("display_name")
+  createDate                 DateTime? @map("create_date")
+  writeDate                  DateTime? @map("write_date")
+
+  // Foreign Keys
+  carId         Int? @map("car_id")
+  offerId       Int? @map("offer_id")
+  carVariantId  Int? @map("car_variant_id")
+  visualId      Int? @map("visual_id")
+  parentMediaId Int? @map("parent_media_id")
+  serviceId     Int? @map("service_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  car         Car?        @relation(fields: [carId], references: [id])
+  offer       CarOffer?   @relation(fields: [offerId], references: [id])
+  carVariant  CarVariant? @relation(fields: [carVariantId], references: [id])
+  visual      Visual?     @relation(fields: [visualId], references: [id])
+  parentMedia CarMedia?   @relation("CarMediaHierarchy", fields: [parentMediaId], references: [id])
+  childMedia  CarMedia[]  @relation("CarMediaHierarchy")
+
+  @@map("car_media")
+}
+
+// ─── CarOffer ─────────────────────────────────────────────────────────────────
+
+model CarOffer {
+  id              Int       @id @default(autoincrement())
+
+  name            Json? // Translatable field
+  description     Json? // Translatable field
+  startDate       DateTime? @map("start_date")
+  endDate         DateTime? @map("end_date")
+  discountType    Int?      @map("discount_type")
+  discountValue   Int?      @map("discount_value")
+  originalPrice   Decimal?  @db.Decimal(12, 2) @map("original_price")
+  finalPrice      Decimal?  @db.Decimal(12, 2) @map("final_price")
+  isActive        Boolean?  @map("is_active")
+  offerTag        String?   @db.Text @map("offer_tag")
+  offerColor      Int?      @map("offer_color")
+  offerBgColor    String?   @db.Text @map("offer_bg_color")
+  bannerUrl       String?   @db.Text @map("banner_url")
+  displayName     String?   @db.Text @map("display_name")
+  createDate      DateTime? @map("create_date")
+  writeDate       DateTime? @map("write_date")
+
+  // Foreign Keys
+  carVariantId    Int? @map("car_variant_id")
+  primaryBannerId Int? @map("primary_banner_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  carVariant CarVariant?    @relation(fields: [carVariantId], references: [id])
+  offerLines CarOfferLine[]
+  media      CarMedia[]
+
+  @@map("car_offers")
+}
+
+// ─── CarOfferLine ─────────────────────────────────────────────────────────────
+
+model CarOfferLine {
+  id                      Int       @id @default(autoincrement())
+
+  originalPrice           Decimal?  @db.Decimal(12, 2) @map("original_price")
+  useCustomDiscount       Int?      @map("use_custom_discount")
+  customDiscountType      Int?      @map("custom_discount_type")
+  customDiscountValue     Int?      @map("custom_discount_value")
+  discountedPrice         Decimal?  @db.Decimal(12, 2) @map("discounted_price")
+  effectiveDiscountType   Int?      @map("effective_discount_type")
+  effectiveDiscountValue  Int?      @map("effective_discount_value")
+  effectiveDiscountAmount Decimal?  @db.Decimal(12, 2) @map("effective_discount_amount")
+  displayName             String?   @db.Text @map("display_name")
+  createDate              DateTime? @map("create_date")
+  writeDate               DateTime? @map("write_date")
+
+  // Foreign Keys
+  offerId Int? @map("offer_id")
+  carId   Int? @map("car_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  offer CarOffer? @relation(fields: [offerId], references: [id])
+  car   Car?      @relation(fields: [carId], references: [id])
+
+  @@map("car_offer_lines")
+}
+
+// ─── Bank ─────────────────────────────────────────────────────────────────────
+
+model Bank {
+  id                       Int       @id @default(autoincrement())
+
+  name                     Json? // Translatable field
+  type                     String?   @db.Text
+  logo                     String?   @db.Text
+  active                   Boolean?
+  logoBunnyPath            String?   @db.Text @map("logo_bunny_path")
+  logoCdnUrl               String?   @db.Text @map("logo_cdn_url")
+  hasPortalRepresentatives Boolean?  @map("has_portal_representatives")
+  partnerCount             Int?      @map("partner_count")
+  representativeCount      Int?      @map("representative_count")
+  applicationCount         Int?      @map("application_count")
+  description              Json? // Translatable field
+  applicationRequirements  Json?     @map("application_requirements") // Translatable field
+  specialNotes             Json?     @map("special_notes") // Translatable field
+  displayName              String?   @db.Text @map("display_name")
+  createDate               DateTime? @map("create_date")
+  writeDate                DateTime? @map("write_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("banks")
+}
+
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+
+model Blog {
+  id               Int       @id @default(autoincrement())
+
+  title            Json? // Translatable field
+  subtitle         Json? // Translatable field
+  slug             String?   @db.Text
+  excerpt          Json? // Translatable field
+  content          Json? // Translatable field
+  featuredImage    String?   @db.Text @map("featured_image")
+  featuredImageAlt Json?     @map("featured_image_alt") // Translatable field
+  imageCaption     Json?     @map("image_caption") // Translatable field
+  bunnyImagePath   String?   @db.Text @map("bunny_image_path")
+  blogType         String?   @db.Text @map("blog_type")
+  priority         String?   @db.Text
+  status           String?   @db.Text
+  publishDate      DateTime? @map("publish_date")
+  expiryDate       DateTime? @map("expiry_date")
+  authorName       Json?     @map("author_name") // Translatable field
+  authorBio        Json?     @map("author_bio") // Translatable field
+  featured         Boolean?
+  sticky           Boolean?
+  allowComments    Boolean?  @map("allow_comments")
+  seoTitle         Json?     @map("seo_title") // Translatable field
+  seoDescription   Json?     @map("seo_description") // Translatable field
+  seoKeywords      Json?     @map("seo_keywords") // Translatable field
+  viewCount        Int?      @map("view_count")
+  shareCount       Int?      @map("share_count")
+  commentCount     Int?      @map("comment_count")
+  isPublished      Boolean?  @map("is_published")
+  active           Boolean?
+  sequence         Int?
+  readingTime      Int?      @map("reading_time")
+  displayName      String?   @db.Text @map("display_name")
+  createDate       DateTime? @map("create_date")
+  writeDate        DateTime? @map("write_date")
+
+  // Foreign Keys
+  categoryId Int? @map("category_id")
+  authorId   Int? @map("author_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category BlogCategory? @relation(fields: [categoryId], references: [id])
+
+  @@map("blogs")
+}
+
+// ─── BlogCategory ─────────────────────────────────────────────────────────────
+
+model BlogCategory {
+  id             Int       @id @default(autoincrement())
+
+  name           Json? // Translatable field
+  description    Json? // Translatable field
+  slug           String?   @db.Text
+  parentPath     String?   @db.Text @map("parent_path")
+  color          String?   @db.Text
+  icon           String?   @db.Text
+  image          String?   @db.Text
+  bunnyImagePath String?   @db.Text @map("bunny_image_path")
+  seoTitle       Json?     @map("seo_title") // Translatable field
+  seoDescription Json?     @map("seo_description") // Translatable field
+  seoKeywords    Json?     @map("seo_keywords") // Translatable field
+  blogCount      Int?      @map("blog_count")
+  active         Boolean?
+  sequence       Int?
+  featured       Boolean?
+  displayName    String?   @db.Text @map("display_name")
+  createDate     DateTime? @map("create_date")
+  writeDate      DateTime? @map("write_date")
+
+  // Foreign Keys
+  parentId Int? @map("parent_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  parent   BlogCategory?  @relation("BlogCategoryHierarchy", fields: [parentId], references: [id])
+  children BlogCategory[] @relation("BlogCategoryHierarchy")
+  blogs    Blog[]
+
+  @@map("blog_categories")
+}
+
+// ─── Visual ───────────────────────────────────────────────────────────────────
+
+model Visual {
+  id                Int       @id @default(autoincrement())
+
+  name              Json? // Translatable field
+  slug              String?   @db.Text
+  displayName       String?   @db.Text @map("display_name")
+  description       Json? // Translatable field
+  active            Boolean?
+  sequence          Int?
+  visualType        String?   @db.Text @map("visual_type")
+  compositionMode   String?   @db.Text @map("composition_mode")
+  compositionConfig String?   @db.Text @map("composition_config")
+  displayMode       String?   @db.Text @map("display_mode")
+  transitionEffect  String?   @db.Text @map("transition_effect")
+  animationSpeed    Int?      @map("animation_speed")
+  autoplay          Boolean?
+  autoplayInterval  Int?      @map("autoplay_interval")
+  loop              Boolean?
+  showNavigation    Boolean?  @map("show_navigation")
+  showPagination    Boolean?  @map("show_pagination")
+  pauseOnHover      Boolean?  @map("pause_on_hover")
+  height            Int?
+  heightMobile      Int?      @map("height_mobile")
+  aspectRatio       String?   @db.Text @map("aspect_ratio")
+  customCss         String?   @db.Text @map("custom_css")
+  customJs          String?   @db.Text @map("custom_js")
+  itemCount         Int?      @map("item_count")
+  linkUrl           String?   @db.Text @map("link_url")
+  linkTarget        String?   @db.Text @map("link_target")
+  buttonText        Json?     @map("button_text") // Translatable field
+  mediaDisplayType  String?   @db.Text @map("media_display_type")
+  mediaSource       String?   @db.Text @map("media_source")
+  mediaTypeFilter   String?   @db.Text @map("media_type_filter")
+  mediaClickAction  String?   @db.Text @map("media_click_action")
+  maxItems          Int?      @map("max_items")
+  cdnUrl            String?   @db.Text @map("cdn_url")
+  cdnThumbnailUrl   String?   @db.Text @map("cdn_thumbnail_url")
+  cdnMobileUrl      String?   @db.Text @map("cdn_mobile_url")
+  cdnUrlsJson       String?   @db.Text @map("cdn_urls_json")
+  cdnUrlsResponsive String?   @db.Text @map("cdn_urls_responsive")
+  cdnVideoUrls      String?   @db.Text @map("cdn_video_urls")
+  primaryMediaUrl   String?   @db.Text @map("primary_media_url")
+  primaryMediaType  String?   @db.Text @map("primary_media_type")
+  lazyLoad          Boolean?  @map("lazy_load")
+  preload           Boolean?
+  imageOptimization String?   @db.Text @map("image_optimization")
+  placementRules    String?   @db.Text @map("placement_rules")
+  showOnMobile      Boolean?  @map("show_on_mobile")
+  showOnDesktop     Boolean?  @map("show_on_desktop")
+  startDate         DateTime? @map("start_date")
+  endDate           DateTime? @map("end_date")
+  targetAudience    String?   @db.Text @map("target_audience")
+  accessToken       String?   @db.Text @map("access_token")
+  lastAccessDate    DateTime? @map("last_access_date")
+  isOnline          Boolean?  @map("is_online")
+  displayUrl        String?   @db.Text @map("display_url")
+  apiData           String?   @db.Text @map("api_data")
+  apiItems          String?   @db.Text @map("api_items")
+  apiMediaUrls      String?   @db.Text @map("api_media_urls")
+  apiConfig         String?   @db.Text @map("api_config")
+  apiMetadata       String?   @db.Text @map("api_metadata")
+  createDate        DateTime? @map("create_date")
+  writeDate         DateTime? @map("write_date")
+
+  // Foreign Keys
+  visualPlaceId Int? @map("visual_place_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  visualPlace VisualPlace? @relation(fields: [visualPlaceId], references: [id])
+  media       CarMedia[]
+
+  @@map("visuals")
+}
+
+// ─── VisualPlace ──────────────────────────────────────────────────────────────
+
+model VisualPlace {
+  id                    Int       @id @default(autoincrement())
+
+  name                  Json? // Translatable field
+  code                  String?   @db.Text
+  displayName           String?   @db.Text @map("display_name")
+  description           Json? // Translatable field
+  active                Boolean?
+  sequence              Int?
+  color                 String?   @db.Text
+  placeType             String?   @db.Text @map("place_type")
+  width                 Int?
+  height                Int?
+  responsiveBreakpoints String?   @db.Text @map("responsive_breakpoints")
+  maxVisuals            Int?      @map("max_visuals")
+  allowMultiple         Boolean?  @map("allow_multiple")
+  rotationEnabled       Boolean?  @map("rotation_enabled")
+  rotationInterval      Int?      @map("rotation_interval")
+  sectionClass          String?   @db.Text @map("section_class")
+  showOnMobile          Boolean?  @map("show_on_mobile")
+  showOnTablet          Boolean?  @map("show_on_tablet")
+  showOnDesktop         Boolean?  @map("show_on_desktop")
+  visualCount           Int?      @map("visual_count")
+  accessToken           String?   @db.Text @map("access_token")
+  lastAccessDate        DateTime? @map("last_access_date")
+  isOnline              Boolean?  @map("is_online")
+  displayUrl            String?   @db.Text @map("display_url")
+  createDate            DateTime? @map("create_date")
+  writeDate             DateTime? @map("write_date")
+
+  // Foreign Keys
+  containerId Int? @map("container_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  visuals Visual[]
+
+  @@map("visual_places")
+}
