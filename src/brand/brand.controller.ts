@@ -23,8 +23,11 @@ export class BrandController {
   }
 
   @Get()
-  findAll(@Query('include') include?: string) {
-    return this.brandService.findAll(include);
+  findAll(
+    @Query('include') include?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.brandService.findAll(include, search);
   }
 
   @Get('by-slug/:slug')

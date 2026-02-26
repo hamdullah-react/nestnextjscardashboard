@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { type Brand, getBrandBySlug } from "../_components/brand-api";
+import { BrandDetailSkeleton } from "../_components/brand-detail-skeleton";
 
 function getText(json: Record<string, string> | null): string {
   if (!json) return "";
@@ -34,7 +35,7 @@ export default function BrandDetailPage() {
   }, [params.slug]);
 
   if (loading) {
-    return <div className="text-muted-foreground p-8">Loading brand...</div>;
+    return <BrandDetailSkeleton />;
   }
 
   if (error || !brand) {

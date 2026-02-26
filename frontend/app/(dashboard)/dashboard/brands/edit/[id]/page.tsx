@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { BrandForm } from "../../_components/brand-form";
 import { type Brand, getBrand } from "../../_components/brand-api";
+import { BrandFormSkeleton } from "../../_components/brand-form-skeleton";
 
 export default function EditBrandPage() {
   const params = useParams();
@@ -25,7 +26,7 @@ export default function EditBrandPage() {
   }, [params.id]);
 
   if (loading) {
-    return <div className="text-muted-foreground p-8">Loading brand...</div>;
+    return <BrandFormSkeleton />;
   }
 
   if (!brand) {

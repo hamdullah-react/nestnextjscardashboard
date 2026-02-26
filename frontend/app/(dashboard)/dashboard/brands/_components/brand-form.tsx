@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { type Brand, createBrand, updateBrand } from "./brand-api";
 
 function toSlug(text: string): string {
@@ -127,14 +128,14 @@ export function BrandForm({ brand }: BrandFormProps) {
           />
         </div>
 
-        {/* Logo URL */}
+        {/* Logo */}
         <div className="grid gap-2">
-          <Label htmlFor="logo">Logo URL</Label>
-          <Input
-            id="logo"
+          <Label>Logo</Label>
+          <FileDropzone
             value={form.logo}
-            onChange={(e) => setForm({ ...form, logo: e.target.value })}
-            placeholder="https://..."
+            onChange={(url) => setForm({ ...form, logo: url })}
+            folder="brands"
+            accept="image/*"
           />
         </div>
 

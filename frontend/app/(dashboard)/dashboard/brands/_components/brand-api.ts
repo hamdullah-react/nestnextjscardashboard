@@ -11,8 +11,11 @@ export interface Brand {
   updatedAt: string;
 }
 
-export async function getBrands(): Promise<Brand[]> {
-  const res = await fetch(`${API_URL}/brands`);
+export async function getBrands(search?: string): Promise<Brand[]> {
+  const params = new URLSearchParams();
+  if (search) params.set("search", search);
+  const query = params.toString();
+  const res = await fetch(`${API_URL}/brands${query ? `?${query}` : ""}`);
   if (!res.ok) throw new Error("Failed to fetch brands");
   return res.json();
 }

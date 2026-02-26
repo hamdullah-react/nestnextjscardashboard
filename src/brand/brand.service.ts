@@ -1,20 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class BrandService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   create(dto: CreateBrandDto) {
     return this.prisma.brand.create({ data: dto as Prisma.BrandCreateInput });
   }
 
-  findAll(include?: string) {
+  async findAll(include?: string, search?: string) {
     const includeRelations = this.parseInclude(include);
-    return this.prisma.brand.findMany({ include: includeRelations });
+    const brands = await this.prisma.brand.findMany({
+      include: includeRelations,
+    });
+    if (!search) return brands;
+    const lower = search.toLowerCase();
+    return brands.filter((brand) => {
+      if (!brand.name || typeof brand.name !== 'object') return false;
+      return Object.values(brand.name as Record<string, string>).some(
+        (v) => typeof v === 'string' && v.toLowerCase().includes(lower),
+      );
+    });
   }
 
   async findOne(id: number, include?: string) {
@@ -50,7 +64,16 @@ export class BrandService {
   }
 
   async remove(id: number) {
-    await this.findOne(id);
+    const brand = await this.findOne(id);
+
+    if (brand.logo) {
+      try {
+        await this.uploadService.delete(brand.logo as string);
+      } catch {
+        // best-effort — don't block deletion if file cleanup fails
+      }
+    }
+
     return this.prisma.brand.delete({ where: { id } });
   }
 
