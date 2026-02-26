@@ -24,20 +24,17 @@ export function FileDropzone({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const deleteFile = useCallback(
-    async (url: string) => {
-      try {
-        await fetch(`${API_URL}/upload`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
-      } catch {
-        // best-effort delete — don't block the user
-      }
-    },
-    [],
-  );
+  const deleteFile = useCallback(async (url: string) => {
+    try {
+      await fetch(`${API_URL}/upload`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+    } catch {
+      // best-effort — don't block the user
+    }
+  }, []);
 
   const upload = useCallback(
     async (file: File) => {
@@ -55,22 +52,36 @@ export function FileDropzone({
           await deleteFile(value);
         }
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", folder);
-
-        const res = await fetch(`${API_URL}/upload`, {
+        // 1. Get signed URL from our backend
+        const res = await fetch(`${API_URL}/upload/signed-url`, {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            folder,
+          }),
         });
 
         if (!res.ok) {
           const body = await res.json().catch(() => null);
-          throw new Error(body?.message || `Upload failed (${res.status})`);
+          throw new Error(body?.message || `Failed to get upload URL (${res.status})`);
         }
 
-        const data: { url: string } = await res.json();
-        onChange(data.url);
+        const { signedUrl, publicUrl } = await res.json();
+
+        // 2. Upload directly to Supabase Storage
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error(`Upload failed (${uploadRes.status})`);
+        }
+
+        onChange(publicUrl);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
       } finally {

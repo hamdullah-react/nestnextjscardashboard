@@ -1,47 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/svg+xml',
+  'image/gif',
+  'application/pdf',
+  'video/mp4',
+  'video/webm',
+];
 
 @Injectable()
 export class UploadService {
   private supabase: SupabaseClient;
+  private supabaseUrl: string;
 
   constructor(private config: ConfigService) {
+    this.supabaseUrl = this.config.getOrThrow<string>('SUPABASE_URL');
     this.supabase = createClient(
-      this.config.getOrThrow<string>('SUPABASE_URL'),
+      this.supabaseUrl,
       this.config.getOrThrow<string>('SUPABASE_SERVICE_ROLE_KEY'),
     );
   }
 
-  async upload(
-    file: Express.Multer.File,
+  async createSignedUploadUrl(
+    filename: string,
+    contentType: string,
     folder = 'general',
     bucket = 'uploads',
-  ): Promise<{ url: string }> {
-    const sanitized = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+  ): Promise<{ signedUrl: string; path: string; publicUrl: string }> {
+    if (!ALLOWED_MIME_TYPES.includes(contentType)) {
+      throw new BadRequestException(
+        `File type ${contentType} is not allowed`,
+      );
+    }
+
+    const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `${folder}/${Date.now()}-${sanitized}`;
 
-    const { error } = await this.supabase.storage
+    const { data, error } = await this.supabase.storage
       .from(bucket)
-      .upload(path, file.buffer, { contentType: file.mimetype });
+      .createSignedUploadUrl(path);
 
-    if (error) {
-      throw new Error(`Upload failed: ${error.message}`);
+    if (error || !data) {
+      throw new Error(`Failed to create signed URL: ${error?.message}`);
     }
 
     const {
       data: { publicUrl },
     } = this.supabase.storage.from(bucket).getPublicUrl(path);
 
-    return { url: publicUrl };
+    return {
+      signedUrl: data.signedUrl,
+      path,
+      publicUrl,
+    };
   }
 
   async delete(url: string, bucket = 'uploads'): Promise<void> {
-    const supabaseUrl = this.config.getOrThrow<string>('SUPABASE_URL');
-    const prefix = `${supabaseUrl}/storage/v1/object/public/${bucket}/`;
+    const prefix = `${this.supabaseUrl}/storage/v1/object/public/${bucket}/`;
 
     if (!url.startsWith(prefix)) {
-      throw new Error('Invalid file URL');
+      throw new BadRequestException('Invalid file URL');
     }
 
     const path = url.slice(prefix.length);
