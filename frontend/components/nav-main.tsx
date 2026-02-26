@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import { useTranslations } from "next-intl"
+import { usePathname } from "next/navigation"
 
 import {
   Collapsible,
@@ -18,7 +18,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { Link, usePathname } from "@/i18n/navigation"
+import Link from "next/link"
 
 export function NavMain({
   items,
@@ -30,15 +30,15 @@ export function NavMain({
     items?: {
       title: string
       url: string
+      icon?: LucideIcon
     }[]
   }[]
 }) {
   const pathname = usePathname()
-  const t = useTranslations("Sidebar")
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{t("management")}</SidebarGroupLabel>
+      <SidebarGroupLabel>Management</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>
           item.items ? (
@@ -53,7 +53,7 @@ export function NavMain({
                   <SidebarMenuButton tooltip={item.title}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                    <ChevronRight className="ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180 rtl:group-data-[state=open]/collapsible:-rotate-90" />
+                    <ChevronRight className="ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
@@ -65,6 +65,7 @@ export function NavMain({
                           isActive={pathname === subItem.url}
                         >
                           <Link href={subItem.url}>
+                            {subItem.icon && <subItem.icon className="size-4" />}
                             <span>{subItem.title}</span>
                           </Link>
                         </SidebarMenuSubButton>
