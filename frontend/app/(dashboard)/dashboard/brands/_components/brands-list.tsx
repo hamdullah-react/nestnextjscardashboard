@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Eye, Search } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +24,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import Link from "next/link";
-import { type Brand, getBrands, deleteBrand } from "./brand-api";
+import { type Brand, type PaginatedResponse, getBrands, deleteBrand } from "./brand-api";
 import { BrandsListSkeleton } from "./brands-list-skeleton";
+
+const PAGE_SIZE = 10;
 
 function getName(name: Record<string, string> | null): string {
   if (!name) return "Untitled";
@@ -31,6 +41,9 @@ export function BrandsList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -38,11 +51,18 @@ export function BrandsList() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const fetchBrands = async (search?: string) => {
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const fetchBrands = async (search?: string, p = page) => {
     setLoading(true);
     try {
-      const data = await getBrands(search);
-      setBrands(data);
+      const res: PaginatedResponse<Brand> = await getBrands(search, p, PAGE_SIZE);
+      setBrands(res.data);
+      setTotalPages(res.totalPages);
+      setTotal(res.total);
     } catch (error) {
       console.error("Failed to fetch brands:", error);
     } finally {
@@ -51,8 +71,8 @@ export function BrandsList() {
   };
 
   useEffect(() => {
-    fetchBrands(debouncedSearch || undefined);
-  }, [debouncedSearch]);
+    fetchBrands(debouncedSearch || undefined, page);
+  }, [debouncedSearch, page]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -60,7 +80,7 @@ export function BrandsList() {
     try {
       await deleteBrand(deleteTarget.id);
       setDeleteTarget(null);
-      fetchBrands();
+      fetchBrands(debouncedSearch || undefined, page);
     } catch (error) {
       console.error("Failed to delete brand:", error);
     } finally {
@@ -68,13 +88,16 @@ export function BrandsList() {
     }
   };
 
+  const startItem = (page - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(page * PAGE_SIZE, total);
+
   return (
     <div className="space-y-4 overflow-hidden">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Brands</h2>
           <p className="text-muted-foreground text-sm">
-            {brands.length} {brands.length === 1 ? "brand" : "brands"}
+            {total} {total === 1 ? "brand" : "brands"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -185,6 +208,46 @@ export function BrandsList() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && total > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">
+            Showing {startItem}-{endItem} of {total}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                key={p}
+                variant={p === page ? "default" : "outline"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

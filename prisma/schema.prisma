@@ -768,3 +768,17 @@ model VisualPlace {
 
   @@map("visual_places")
 }
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  url       String
+  path      String
+  filename  String
+  mimetype  String
+  size      Int
+  folder    String   @default("general")
+  alt       String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("media")
+}

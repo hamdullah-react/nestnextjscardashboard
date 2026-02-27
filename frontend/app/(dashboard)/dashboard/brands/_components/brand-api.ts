@@ -11,11 +11,25 @@ export interface Brand {
   updatedAt: string;
 }
 
-export async function getBrands(search?: string): Promise<Brand[]> {
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function getBrands(
+  search?: string,
+  page = 1,
+  limit = 10,
+): Promise<PaginatedResponse<Brand>> {
   const params = new URLSearchParams();
   if (search) params.set("search", search);
+  params.set("page", String(page));
+  params.set("limit", String(limit));
   const query = params.toString();
-  const res = await fetch(`${API_URL}/brands${query ? `?${query}` : ""}`);
+  const res = await fetch(`${API_URL}/brands?${query}`);
   if (!res.ok) throw new Error("Failed to fetch brands");
   return res.json();
 }

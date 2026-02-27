@@ -16,19 +16,36 @@ export class BrandService {
     return this.prisma.brand.create({ data: dto as Prisma.BrandCreateInput });
   }
 
-  async findAll(include?: string, search?: string) {
+  async findAll(
+    include?: string,
+    search?: string,
+    page = 1,
+    limit = 10,
+  ) {
     const includeRelations = this.parseInclude(include);
-    const brands = await this.prisma.brand.findMany({
+
+    // Build where clause for search
+    let allBrands = await this.prisma.brand.findMany({
       include: includeRelations,
+      orderBy: { id: 'desc' },
     });
-    if (!search) return brands;
-    const lower = search.toLowerCase();
-    return brands.filter((brand) => {
-      if (!brand.name || typeof brand.name !== 'object') return false;
-      return Object.values(brand.name as Record<string, string>).some(
-        (v) => typeof v === 'string' && v.toLowerCase().includes(lower),
-      );
-    });
+
+    if (search) {
+      const lower = search.toLowerCase();
+      allBrands = allBrands.filter((brand) => {
+        if (!brand.name || typeof brand.name !== 'object') return false;
+        return Object.values(brand.name as Record<string, string>).some(
+          (v) => typeof v === 'string' && v.toLowerCase().includes(lower),
+        );
+      });
+    }
+
+    const total = allBrands.length;
+    const totalPages = Math.ceil(total / limit);
+    const skip = (page - 1) * limit;
+    const data = allBrands.slice(skip, skip + limit);
+
+    return { data, total, page, limit, totalPages };
   }
 
   async findOne(id: number, include?: string) {
